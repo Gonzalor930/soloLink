@@ -1,9 +1,5 @@
 package soloLink.demo.dto;
-
-//Para manejo de errores
 import jakarta.validation.constraints.*;
-
-//Para manejo de nuevos profesores
 public record TeacherCreateDTO(
 
         @NotBlank(message = "El nombre no puede estar vacío")
@@ -26,4 +22,4 @@ public record TeacherCreateDTO(
         Double pricePerHour,
 
         String description
-) {}
+){}
