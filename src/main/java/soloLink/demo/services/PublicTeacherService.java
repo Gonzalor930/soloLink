@@ -5,8 +5,11 @@ import soloLink.demo.models.Availability;
 import soloLink.demo.models.TeacherUser;
 import soloLink.demo.repositories.AvailabilityRepository;
 import soloLink.demo.repositories.TeacherUserRepository;
+import soloLink.demo.models.Booking;
+import soloLink.demo.repositories.BookingRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,38 +19,47 @@ public class PublicTeacherService {
 
     private final TeacherUserRepository teacherRepository;
     private final AvailabilityRepository availabilityRepository;
+    private final BookingRepository bookingRepository;
 
-    public PublicTeacherService(TeacherUserRepository teacherRepository, AvailabilityRepository availabilityRepository) {
+    public PublicTeacherService(
+            TeacherUserRepository teacherRepository,
+            AvailabilityRepository availabilityRepository,
+            BookingRepository bookingRepository) {
         this.teacherRepository = teacherRepository;
         this.availabilityRepository = availabilityRepository;
+        this.bookingRepository = bookingRepository;
     }
 
-    //metodo para slots de tiempo disponibles
     public List<LocalTime> getAvailableSlots(String publicId, LocalDate date) {
 
-        //Busca al profesor por su link público
         TeacherUser teacher = teacherRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
 
-        //Obtiene qué día de la semana es la fecha solicitada (ej: Lunes)
         java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
 
-        //Busca la disponibilidad del profesor para ese día
         List<Availability> rules = availabilityRepository.findByTeacherIdAndDayOfWeek(teacher.getId(), dayOfWeek);
 
-        //Genera los bloques de 1 hora
         List<LocalTime> slots = new ArrayList<>();
 
         for (Availability rule : rules) {
             LocalTime currentSlot = rule.getStartTime();
 
-            // Mientras el bloque actual + 1 hora no supere la hora de fin del turno
             while (!currentSlot.plusHours(1).isAfter(rule.getEndTime())) {
                 slots.add(currentSlot);
-                currentSlot = currentSlot.plusHours(1); // Suma 1 hora para el siguiente bloque
+                currentSlot = currentSlot.plusHours(1);
             }
         }
+            LocalDateTime startOfDay = date.atStartOfDay(); // 00:00
+            LocalDateTime endOfDay = date.atTime(23, 59, 59); // 23:59:59
 
+            List<Booking> existingBookings = bookingRepository
+                    .findByTeacherIdAndStartTimeBetween(teacher.getId(), startOfDay, endOfDay);
+
+            List<LocalTime> bookedHours = existingBookings.stream()
+                    .map(booking -> booking.getStartTime().toLocalTime())
+                    .toList();
+
+            slots.removeAll(bookedHours);
         return slots;
     }
 }

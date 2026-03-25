@@ -2,6 +2,8 @@ package soloLink.demo.models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "bookings")
@@ -28,9 +30,18 @@ public class Booking {
     @Column(nullable = false)
     private LocalDateTime endTime;
 
-    // PENDING, CONFIRMED (Podrías usar un Enum aquí también más adelante)
     @Column(nullable = false)
     private String status = "PENDING";
 
-    // Getters y Setters...
+    public Long getId() {
+        return id;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
 }

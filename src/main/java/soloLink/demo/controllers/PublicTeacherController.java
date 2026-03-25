@@ -43,7 +43,7 @@ public class PublicTeacherController {
             return ResponseEntity.notFound().build();
         }
     }
-
+    @GetMapping("/teachers/{publicId}/slots")
     public ResponseEntity<List<LocalTime>> getTeacherSlots(
             @PathVariable String publicId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date){
