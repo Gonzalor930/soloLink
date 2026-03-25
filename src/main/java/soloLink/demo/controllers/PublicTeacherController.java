@@ -1,12 +1,16 @@
 package soloLink.demo.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import soloLink.demo.dto.TeacherPublicProfileDTO;
 import soloLink.demo.models.TeacherUser;
 import soloLink.demo.repositories.TeacherUserRepository;
 import soloLink.demo.services.PublicTeacherService;
+import soloLink.demo.dto.BookingCreateDTO;
+import soloLink.demo.dto.BookingResponseDTO;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -50,5 +54,15 @@ public class PublicTeacherController {
         List<LocalTime> slots = publicTeacherService.getAvailableSlots(publicId,date);
 
         return ResponseEntity.ok(slots);
+    }
+
+    @PostMapping("/teachers/{publicId}/bookings")
+    public ResponseEntity<BookingResponseDTO> createBooking(
+            @PathVariable String publicId,
+            @Valid @RequestBody BookingCreateDTO dto) {
+
+        BookingResponseDTO response = publicTeacherService.createBooking(publicId, dto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

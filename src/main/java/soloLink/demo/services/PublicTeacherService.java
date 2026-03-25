@@ -7,6 +7,8 @@ import soloLink.demo.repositories.AvailabilityRepository;
 import soloLink.demo.repositories.TeacherUserRepository;
 import soloLink.demo.models.Booking;
 import soloLink.demo.repositories.BookingRepository;
+import soloLink.demo.dto.BookingCreateDTO;
+import soloLink.demo.dto.BookingResponseDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,5 +63,45 @@ public class PublicTeacherService {
 
             slots.removeAll(bookedHours);
         return slots;
+    }
+
+    public BookingResponseDTO createBooking(String publicId, BookingCreateDTO dto) {
+
+        // Busca al profesor
+        TeacherUser teacher = teacherRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
+
+        // 2. Extrae la fecha y hora solicitada
+        java.time.LocalDate date = dto.startTime().toLocalDate();
+        java.time.LocalTime time = dto.startTime().toLocalTime();
+
+        // pregunta si esta disponible
+
+        java.util.List<java.time.LocalTime> availableSlots = getAvailableSlots(publicId, date);
+
+        if (!availableSlots.contains(time)) {
+            throw new RuntimeException("El horario seleccionado ya no está disponible o no es válido.");
+        }
+
+        // crea la reserva
+        Booking booking = new Booking();
+        booking.setTeacher(teacher);
+        booking.setStudentName(dto.studentName());
+        booking.setStudentEmail(dto.studentEmail());
+        booking.setStartTime(dto.startTime());
+        booking.setEndTime(dto.startTime().plusHours(1)); // Le suma 1 hora automáticamente
+        booking.setStatus("PENDING");
+
+        // guarda la reserva
+        Booking savedBooking = bookingRepository.save(booking);
+
+        // devuelve la respuesta
+        return new BookingResponseDTO(
+                savedBooking.getId(),
+                savedBooking.getStudentName(),
+                savedBooking.getStartTime(),
+                savedBooking.getEndTime(),
+                savedBooking.getStatus()
+        );
     }
 }
