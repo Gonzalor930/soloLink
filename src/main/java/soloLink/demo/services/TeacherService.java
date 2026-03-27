@@ -8,24 +8,29 @@ import soloLink.demo.models.Availability;
 import soloLink.demo.models.TeacherUser;
 import soloLink.demo.repositories.AvailabilityRepository;
 import soloLink.demo.repositories.TeacherUserRepository;
+//implementa el PasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class TeacherService {
     private final TeacherUserRepository teacherRepository;
     private final AvailabilityRepository availabilityRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public TeacherService(TeacherUserRepository teacherRepository, AvailabilityRepository availabilityRepository) {
+    public TeacherService(TeacherUserRepository teacherRepository, AvailabilityRepository availabilityRepository, PasswordEncoder passwordEncoder) {
         this.teacherRepository = teacherRepository;
         this.availabilityRepository = availabilityRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     public TeacherUser createTeacher(TeacherCreateDTO dto) {
         TeacherUser teacher = new TeacherUser();
         teacher.setName(dto.name());
         teacher.setEmail(dto.email());
-        teacher.setPassword(dto.password());
         teacher.setPublicId(dto.publicId());
         teacher.setPricePerHour(dto.pricePerHour());
         teacher.setDescription(dto.description());
+        String encodedPassword = passwordEncoder.encode(dto.password());
+        teacher.setPassword(encodedPassword);
         return teacherRepository.save(teacher);
     }
     public AvailabilityResponseDTO addAvailability(Long teacherId, AvailabilityCreateDTO dto) {
