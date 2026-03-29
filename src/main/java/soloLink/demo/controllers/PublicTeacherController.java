@@ -47,11 +47,12 @@ public class PublicTeacherController {
             return ResponseEntity.notFound().build();
         }
     }
+
     @GetMapping("/teachers/{publicId}/slots")
     public ResponseEntity<List<LocalTime>> getTeacherSlots(
             @PathVariable String publicId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date){
-        List<LocalTime> slots = publicTeacherService.getAvailableSlots(publicId,date);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<LocalTime> slots = publicTeacherService.getAvailableSlots(publicId, date);
 
         return ResponseEntity.ok(slots);
     }

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByTeacherIdAndStartTimeBetween(Long teacherId, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    List<Booking> findByTeacherIdOrderByStartTimeAsc(Long teacherId);
 }
