@@ -36,61 +36,53 @@ public class TeacherService {
         teacher.setPassword(encodedPassword);
         return teacherRepository.save(teacher);
     }
-    public AvailabilityResponseDTO addAvailability(Long teacherId, AvailabilityCreateDTO dto) {
-        TeacherUser teacher = teacherRepository.findById(teacherId).orElseThrow(() -> new RuntimeException("Profesor no encontrado con ID: " + teacherId));
+    public AvailabilityResponseDTO addAvailability(String email, AvailabilityCreateDTO dto) {
+        TeacherUser teacher = teacherRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
         Availability availability = new Availability();
         availability.setTeacher(teacher);
         availability.setDayOfWeek(dto.dayOfWeek());
         availability.setStartTime(dto.startTime());
         availability.setEndTime(dto.endTime());
-
         Availability savedAvailability = availabilityRepository.save(availability);
 
         return new AvailabilityResponseDTO(
-                savedAvailability.getId(),
-                savedAvailability.getDayOfWeek(),
-                savedAvailability.getStartTime(),
-                savedAvailability.getEndTime()
+                savedAvailability.getId(), savedAvailability.getDayOfWeek(),
+                savedAvailability.getStartTime(), savedAvailability.getEndTime()
         );
     }
 
-    public List<BookingResponseDTO> getTeacherBookings(Long teacherId) {
-        if (!teacherRepository.existsById(teacherId)) {
-            throw new RuntimeException("Profesor no encontrado");
-        }
-        List<Booking> bookings = bookingRepository.findByTeacherIdOrderByStartTimeAsc(teacherId);
+    public List<BookingResponseDTO> getTeacherBookings(String email) {
+        TeacherUser teacher = teacherRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
+        List<Booking> bookings = bookingRepository.findByTeacherIdOrderByStartTimeAsc(teacher.getId());
 
         return bookings.stream()
                 .map(booking -> new BookingResponseDTO(
-                        booking.getId(),
-                        booking.getStudentName(),
-                        booking.getStartTime(),
-                        booking.getEndTime(),
-                        booking.getStatus()
-                ))
-                .toList();
+                        booking.getId(), booking.getStudentName(), booking.getStartTime(),
+                        booking.getEndTime(), booking.getStatus()
+                )).toList();
     }
 
-    public BookingResponseDTO updateBookingStatus(Long teacherId, Long bookingId, BookingStatusUpdateDTO dto) {
+    public BookingResponseDTO updateBookingStatus(String email, Long bookingId, BookingStatusUpdateDTO dto) {
+        TeacherUser teacher = teacherRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
-
-        if (!booking.getTeacher().getId().equals(teacherId)) {
+        if (!booking.getTeacher().getId().equals(teacher.getId())) {
             throw new RuntimeException("Esta reserva no te pertenece");
         }
         booking.setStatus(dto.status());
         Booking updatedBooking = bookingRepository.save(booking);
+
         return new BookingResponseDTO(
-                updatedBooking.getId(),
-                updatedBooking.getStudentName(),
-                updatedBooking.getStartTime(),
-                updatedBooking.getEndTime(),
-                updatedBooking.getStatus()
+                updatedBooking.getId(), updatedBooking.getStudentName(),
+                updatedBooking.getStartTime(), updatedBooking.getEndTime(), updatedBooking.getStatus()
         );
     }
 
-    public soloLink.demo.dto.TeacherPublicProfileDTO updateProfile(Long teacherId, soloLink.demo.dto.TeacherProfileUpdateDTO dto) {
-        TeacherUser teacher = teacherRepository.findById(teacherId)
+    public soloLink.demo.dto.TeacherPublicProfileDTO updateProfile(String email, soloLink.demo.dto.TeacherProfileUpdateDTO dto) {
+        TeacherUser teacher = teacherRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
         if (dto.description() != null) {
             teacher.setDescription(dto.description());
@@ -98,10 +90,8 @@ public class TeacherService {
         TeacherUser updatedTeacher = teacherRepository.save(teacher);
 
         return new soloLink.demo.dto.TeacherPublicProfileDTO(
-                updatedTeacher.getName(),
-                updatedTeacher.getDescription(),
-                updatedTeacher.getPricePerHour(),
-                updatedTeacher.getPublicId()
+                updatedTeacher.getName(), updatedTeacher.getDescription(),
+                updatedTeacher.getPricePerHour(), updatedTeacher.getPublicId()
         );
     }
 }

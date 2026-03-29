@@ -8,6 +8,7 @@ import soloLink.demo.dto.*;
 import soloLink.demo.models.TeacherUser;
 import soloLink.demo.services.TeacherService;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -25,38 +26,38 @@ public class TeacherController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTeacher);
     }
 
-    @PostMapping("/{id}/availabilities")
+    @PostMapping("/me/availabilities")
     public ResponseEntity<AvailabilityResponseDTO> addAvailability(
-            @PathVariable Long id,
+            Principal principal,
             @Valid @RequestBody AvailabilityCreateDTO dto) {
-        AvailabilityResponseDTO response = teacherService.addAvailability(id, dto);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+                AvailabilityResponseDTO response = teacherService.
+                        addAvailability(principal.getName(), dto);
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{id}/bookings")
-    public ResponseEntity<List<BookingResponseDTO>> getBookings(@PathVariable Long id) {
-        List<BookingResponseDTO> bookings = teacherService.getTeacherBookings(id);
-
-        return ResponseEntity.ok(bookings);
+    @GetMapping("/me/bookings")
+    public ResponseEntity<List<BookingResponseDTO>> getBookings(Principal principal) {
+                List<BookingResponseDTO> bookings = teacherService.
+                        getTeacherBookings(principal.getName());
+                return ResponseEntity.ok(bookings);
     }
 
-    @PatchMapping("/{id}/bookings/{bookingId}/status")
+    @PatchMapping("/me/bookings/{bookingId}/status")
     public ResponseEntity<BookingResponseDTO> updateBookingStatus(
-            @PathVariable Long id,
+            Principal principal,
             @PathVariable Long bookingId,
             @Valid @RequestBody BookingStatusUpdateDTO dto) {
-        BookingResponseDTO updatedBooking = teacherService.updateBookingStatus(id, bookingId, dto);
-
-        return ResponseEntity.ok(updatedBooking);
+                BookingResponseDTO updatedBooking = teacherService.
+                        updateBookingStatus(principal.getName(), bookingId, dto);
+                return ResponseEntity.ok(updatedBooking);
     }
 
-    @PatchMapping("/{id}/profile")
+    @PatchMapping("/me/profile")
     public ResponseEntity<soloLink.demo.dto.TeacherPublicProfileDTO> updateProfile(
-            @PathVariable Long id,
+            Principal principal,
             @RequestBody soloLink.demo.dto.TeacherProfileUpdateDTO dto) {
-
-        soloLink.demo.dto.TeacherPublicProfileDTO updatedProfile = teacherService.updateProfile(id, dto);
-        return ResponseEntity.ok(updatedProfile);
+                soloLink.demo.dto.TeacherPublicProfileDTO updatedProfile = teacherService.
+                        updateProfile(principal.getName(), dto);
+                return ResponseEntity.ok(updatedProfile);
     }
 }
