@@ -1,23 +1,26 @@
 package soloLink.demo.services;
 
 import org.springframework.stereotype.Service;
-import soloLink.demo.dto.AvailabilityCreateDTO;
-import soloLink.demo.dto.AvailabilityResponseDTO;
-import soloLink.demo.dto.TeacherCreateDTO;
+import soloLink.demo.dto.*;
 import soloLink.demo.models.Availability;
+import soloLink.demo.models.Booking;
 import soloLink.demo.models.TeacherUser;
 import soloLink.demo.repositories.AvailabilityRepository;
 import soloLink.demo.repositories.TeacherUserRepository;
-//implementa el PasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder;
+import soloLink.demo.repositories.BookingRepository;
+
+import java.util.List;
 
 @Service
 public class TeacherService {
+    private final BookingRepository bookingRepository;
     private final TeacherUserRepository teacherRepository;
     private final AvailabilityRepository availabilityRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public TeacherService(TeacherUserRepository teacherRepository, AvailabilityRepository availabilityRepository, PasswordEncoder passwordEncoder) {
+    public TeacherService(BookingRepository bookingRepository, TeacherUserRepository teacherRepository, AvailabilityRepository availabilityRepository, PasswordEncoder passwordEncoder) {
+        this.bookingRepository = bookingRepository;
         this.teacherRepository = teacherRepository;
         this.availabilityRepository = availabilityRepository;
         this.passwordEncoder = passwordEncoder;
@@ -51,4 +54,54 @@ public class TeacherService {
         );
     }
 
+    public List<BookingResponseDTO> getTeacherBookings(Long teacherId) {
+        if (!teacherRepository.existsById(teacherId)) {
+            throw new RuntimeException("Profesor no encontrado");
+        }
+        List<Booking> bookings = bookingRepository.findByTeacherIdOrderByStartTimeAsc(teacherId);
+
+        return bookings.stream()
+                .map(booking -> new BookingResponseDTO(
+                        booking.getId(),
+                        booking.getStudentName(),
+                        booking.getStartTime(),
+                        booking.getEndTime(),
+                        booking.getStatus()
+                ))
+                .toList();
+    }
+
+    public BookingResponseDTO updateBookingStatus(Long teacherId, Long bookingId, BookingStatusUpdateDTO dto) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        if (!booking.getTeacher().getId().equals(teacherId)) {
+            throw new RuntimeException("Esta reserva no te pertenece");
+        }
+        booking.setStatus(dto.status());
+        Booking updatedBooking = bookingRepository.save(booking);
+        return new BookingResponseDTO(
+                updatedBooking.getId(),
+                updatedBooking.getStudentName(),
+                updatedBooking.getStartTime(),
+                updatedBooking.getEndTime(),
+                updatedBooking.getStatus()
+        );
+    }
+
+    public soloLink.demo.dto.TeacherPublicProfileDTO updateProfile(Long teacherId, soloLink.demo.dto.TeacherProfileUpdateDTO dto) {
+        TeacherUser teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Profesor no encontrado"));
+        if (dto.description() != null) {
+            teacher.setDescription(dto.description());
+        }
+        TeacherUser updatedTeacher = teacherRepository.save(teacher);
+
+        return new soloLink.demo.dto.TeacherPublicProfileDTO(
+                updatedTeacher.getName(),
+                updatedTeacher.getDescription(),
+                updatedTeacher.getPricePerHour(),
+                updatedTeacher.getPublicId()
+        );
+    }
 }
